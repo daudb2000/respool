@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#F6F4EF">
+<title>Respool — shipping label</title>
+<meta name="description" content="Print-ready shipping label for a Respool scrap box.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<script>
+window.RESPOOL_CONFIG = {
+  SUPABASE_URL: "SUPABASE_URL",
+  SUPABASE_ANON_KEY: "SUPABASE_ANON_KEY"
+};
+</script>
+<!-- Deploy-time overrides. MUST come after the block above. -->
+<script src="/respool/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+<style>
+/* =====================================================================
+   Two documents in one file.
+
+   SCREEN  — Regrind chrome (porcelain paper, warm ink, forest primary),
+             the same system as the buyer app, ops and the recycler
+             console. Just enough of it to frame the label and the Print
+             button. No lime here: a label is not credit.
+   PRINT   — A6 landscape, ink on white, nothing decorative. A label is
+             a functional object: the courier reads it, not the brand.
+             The print block below is deliberately untouched.
+   ===================================================================== */
+:root{
+  --porcelain:#F6F4EF; --paper:#FFFFFF; --wash:#EFEDE5;
+  --ink:#15140F; --ink-muted:#5C594E; --ink-dim:#8B8778;
+  --hair:#E6E2D8; --forest:#0E4A38; --forest-lift:#1C7A5C;
+  --amber:#F4B63F; --clay:#A8321E;
+
+  --r-sm:10px; --r-card:18px; --r-pill:999px;
+  --ease:cubic-bezier(.2,.8,.3,1);
+  --sh-hair:0 1px 2px rgba(21,20,15,.05);
+  --sh-soft:0 1px 2px rgba(21,20,15,.05),0 8px 28px rgba(21,20,15,.07);
+  --sh-lift:0 2px 6px rgba(21,20,15,.08),0 24px 60px rgba(21,20,15,.16);
+
+  --display:'Jost',ui-sans-serif,system-ui,sans-serif;
+  --body:'Inter',ui-sans-serif,system-ui,sans-serif;
+  --data:'JetBrains Mono',ui-monospace,SFMono-Regular,monospace;
+
+  /* legacy names, mapped so nothing can drift off-system */
+  --ground:var(--porcelain); --surface:var(--paper); --surface-2:var(--wash);
+  --line:var(--hair); --bone:var(--ink); --dim:var(--ink-muted); --muted:var(--ink-muted);
+  --f-teal:var(--forest); --f-amber:var(--amber); --f-coral:var(--clay);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+body{
+  background:var(--porcelain);color:var(--ink);font-family:var(--body);
+  font-size:14.5px;line-height:1.62;-webkit-font-smoothing:antialiased;
+  padding:24px clamp(16px,4vw,48px) 60px;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(900px 620px at 100% -8%, rgba(214,255,75,.12), transparent 62%),
+    radial-gradient(760px 700px at -10% 22%, rgba(14,74,56,.06), transparent 64%);
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(14,74,56,.22);border-radius:var(--r-sm)}
+
+.page{max-width:760px;margin:0 auto}
+.mark{
+  display:flex;align-items:center;gap:9px;font-family:var(--display);
+  font-weight:700;letter-spacing:-.035em;font-size:19px;text-decoration:none;color:var(--ink);
+}
+.mark i{
+  width:19px;height:19px;border-radius:50%;display:block;flex:none;
+  background:conic-gradient(from 0deg,var(--forest),var(--forest-lift),var(--forest));
+  box-shadow:inset 0 0 0 5px var(--porcelain),inset 0 0 0 6px rgba(21,20,15,.12);
+  animation:spin 14s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.mark small{font-family:var(--data);font-size:11.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--forest);font-weight:400;
+  border:1px solid rgba(14,74,56,.25);border-radius:var(--r-pill);padding:2px 9px}
+
+.eyebrow{font-family:var(--data);font-size:11.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-muted)}
+.sub{color:var(--ink-muted);font-size:13.5px;max-width:56ch}
+
+.chrome{margin-top:22px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:13px 24px;border-radius:var(--r-pill);background:var(--forest);color:var(--porcelain);
+  border:1.5px solid transparent;font-weight:600;font-size:14.5px;text-decoration:none;
+  transition:transform 140ms var(--ease),box-shadow 180ms var(--ease),border-color 160ms var(--ease);
+}
+.btn:hover{box-shadow:var(--sh-lift)}
+.btn:active{transform:scale(.985)}
+.btn-ghost{background:transparent;color:var(--ink);border-color:var(--hair);box-shadow:none}
+.btn-ghost:hover{border-color:var(--ink);box-shadow:none}
+
+.state{margin-top:26px;padding:18px 20px;border-radius:var(--r-card);
+  border:1.5px solid rgba(14,74,56,.28);background:var(--paper);box-shadow:var(--sh-hair)}
+.state b{display:block;font-family:var(--display);font-size:19px;font-weight:700;letter-spacing:-.035em}
+.state p{margin-top:7px;font-size:14px;color:var(--ink-muted);max-width:56ch}
+.state.is-err{border-color:rgba(168,50,30,.42);background:linear-gradient(180deg,rgba(168,50,30,.06),var(--paper))}
+
+/* ---- the label itself: always ink-on-white, on screen and on paper ----
+   On screen it sits in a warm card frame so it reads as a document you are
+   about to print; the print block strips the frame back to nothing.       */
+.label{
+  margin-top:22px;background:#fff;color:#000;border-radius:var(--r-card);
+  padding:18px 20px;display:grid;
+  grid-template-columns:1fr auto;gap:16px;align-items:start;
+  border:1px solid #000;box-shadow:var(--sh-soft);
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.label-main{min-width:0}
+.label-hdr{
+  display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:10px;
+}
+.label-brand{font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:-.02em}
+.label-carrier{font-family:var(--data);font-size:12px;text-transform:uppercase;letter-spacing:.1em}
+
+.lbl{font-family:var(--data);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#444}
+.to{margin-top:2px;font-size:22px;line-height:1.24;font-weight:600}
+.to b{display:block;font-size:25px;font-weight:700}
+.from{margin-top:12px;font-size:13px;line-height:1.35}
+.meta{
+  margin-top:12px;padding-top:8px;border-top:1px solid #000;
+  display:flex;flex-wrap:wrap;gap:4px 22px;font-family:var(--data);font-size:11.5px;
+}
+.meta span b{font-weight:700}
+.dropoff{margin-top:8px;font-size:12.5px;line-height:1.35}
+.covered{margin-top:6px;font-family:var(--data);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+
+.qr{text-align:center;flex:0 0 auto}
+.qr img{display:block;width:34mm;height:34mm}
+.qr .token{margin-top:5px;font-family:var(--data);font-size:9.5px;word-break:break-all;max-width:34mm}
+.qr .cap{margin-top:2px;font-size:9px;line-height:1.25;max-width:34mm;color:#333}
+
+/* ============================ PRINT ============================= */
+@page{ size:A6 landscape; margin:6mm; }
+
+@media print{
+  html,body{background:#fff!important;color:#000!important;padding:0!important;margin:0!important}
+  .noprint{display:none!important}
+  .page{max-width:none;margin:0}
+  .label{
+    margin:0;border:0;border-radius:0;padding:0;box-shadow:none;
+    width:100%;
+    /* A6 landscape minus @page margins */
+    page-break-inside:avoid;break-inside:avoid;
+  }
+  .label-hdr{margin-bottom:8px}
+  .to{font-size:19pt}
+  .to b{font-size:21pt}
+  .qr img{width:30mm;height:30mm}
+  a{color:#000;text-decoration:none}
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="noprint">
+    <a class="mark" href="/respool/app"><i></i>Respool <small>label</small></a>
+    <p class="sub" style="margin-top:10px">
+      Print this at A6, tape it to the box with the QR facing out, and drop it off.
+      One sheet of A4 works too — the label sits in the top-left.
+    </p>
+  </div>
+
+  <div id="state" class="state noprint" hidden></div>
+
+  <div id="label" class="label" hidden></div>
+
+  <div class="chrome noprint" id="chrome" hidden>
+    <button class="btn" id="printBtn">Print label</button>
+    <a class="btn btn-ghost" href="/respool/app#/scrap">Back to my box</a>
+  </div>
+
+</div>
+
+<script src="label.js"></script>
+</body>
+</html>

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Respool — recycler console</title>
+<meta name="description" content="Intake queue, verification, listings and scoreboard for Respool recyclers.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#F6F4EF">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="recycler.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ================= rail ================= -->
+  <aside class="rail">
+    <div class="rail-top">
+      <a class="mark" href="/"><i></i>Respool <small>ops</small></a>
+    </div>
+
+    <nav class="nav" aria-label="Recycler console">
+      <button data-go="queue" aria-current="true">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M3 7h18M3 12h18M3 17h11"/></svg>
+        Intake queue <span class="count" id="navCount">0</span>
+      </button>
+      <button data-go="verify">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+        Verification
+      </button>
+      <button data-go="listings">
+        <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Listings
+      </button>
+      <button data-go="scoreboard">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M4 19V10M10 19V5M16 19v-6M22 19H2"/></svg>
+        Scoreboard
+      </button>
+    </nav>
+
+    <div class="rail-foot">
+      <div class="who" id="who"></div>
+      <div>Payouts via Stripe Connect</div>
+    </div>
+  </aside>
+
+  <!-- ================= main ================= -->
+  <main class="main">
+    <header class="topbar">
+      <button class="burger" id="burger" aria-label="Menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <h1 id="viewTitle">Intake queue</h1>
+        <div class="sub" id="viewSub">Verify, weigh, release credit</div>
+      </div>
+      <div class="spacer"></div>
+      <span class="demo-flag" id="demoFlag" hidden>demo data</span>
+      <a class="btn ghost sm" href="/respool/app">View storefront</a>
+    </header>
+
+    <!-- ---------- not a recycler ---------- -->
+    <section class="not-recycler" id="notRecycler" hidden>
+      <div class="card">
+        <div class="card-h"><h3>Recycler console</h3></div>
+        <div class="card-b" id="notRecyclerBody"></div>
+      </div>
+    </section>
+
+    <!-- ---------- intake queue ---------- -->
+    <section class="view" id="view-queue">
+      <!-- Accepting intake: the recycler's own hand on the allocator tap. -->
+      <div class="intake-switch" id="intakeSwitch"></div>
+
+      <div class="grid g-4" id="queueStats" style="margin-bottom:18px"></div>
+
+      <div class="qbar">
+        <div class="seg" id="queueSeg" role="group" aria-label="Filter shipments">
+          <button data-f="awaiting" aria-pressed="true">Awaiting</button>
+          <button data-f="late" aria-pressed="false">Past SLA</button>
+          <button data-f="done" aria-pressed="false">Credited</button>
+          <button data-f="all" aria-pressed="false">All</button>
+        </div>
+        <input class="search" id="queueSearch" type="search" placeholder="Search reference or sender">
+        <div style="flex:1"></div>
+        <span class="eyebrow">14-day SLA from delivery · escalation at 21</span>
+      </div>
+
+      <div class="rows" id="queueRows"></div>
+    </section>
+
+    <!-- ---------- verification ---------- -->
+    <section class="view" id="view-verify" hidden>
+      <div id="verifyBody"></div>
+    </section>
+
+    <!-- ---------- listings ---------- -->
+    <section class="view" id="view-listings" hidden>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <h2 style="font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:-.02em">Your batches</h2>
+        <span class="eyebrow">Every batch is its own product</span>
+        <div style="flex:1"></div>
+        <button class="btn" id="newListing">New batch listing</button>
+      </div>
+      <div class="tiles" id="listingTiles" style="margin-bottom:26px"></div>
+
+      <div class="split">
+        <form class="card" id="listingForm">
+          <div class="card-h"><h3>Create batch listing</h3><div class="spacer"></div>
+            <span class="eyebrow">Draft — reviewed before it goes live</span></div>
+          <div class="card-b">
+
+            <div class="field">
+              <label for="lTitle">Batch name</label>
+              <input class="inp" id="lTitle" placeholder="e.g. Ember Swirl PLA" required>
+              <div class="hint">Describe the colour as a buyer would search for it. Marbling and swirl sell.</div>
+            </div>
+
+            <div class="row-3">
+              <div class="field">
+                <label for="lMaterial">Material</label>
+                <select class="inp" id="lMaterial">
+                  <option>PLA</option><option>PETG</option><option>ABS</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="lGrade">Grade — central scale</label>
+                <select class="inp" id="lGrade">
+                  <option value="A">Grade A</option>
+                  <option value="B" selected>Grade B</option>
+                  <option value="C">Grade C</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="lQty">Spools available</label>
+                <input class="inp" id="lQty" type="number" min="1" value="8">
+              </div>
+            </div>
+            <div class="callout" style="margin:-4px 0 16px"><span>◱</span><div id="gradeText"></div></div>
+
+            <div class="row-3">
+              <div class="field">
+                <label for="lDia">Diameter (mm)</label>
+                <select class="inp" id="lDia"><option>1.75</option><option>2.85</option></select>
+              </div>
+              <div class="field">
+                <label for="lTol">Measured tolerance (±mm)</label>
+                <input class="inp" id="lTol" type="number" step="0.01" min="0.01" value="0.05">
+                <div class="hint">Measured, not claimed.</div>
+              </div>
+              <div class="field">
+                <label for="lNet">Net filament weight (kg)</label>
+                <input class="inp" id="lNet" type="number" step="0.05" min="0.1" value="1.00">
+                <div class="hint">Excluding the spool.</div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="lPrice">Price per spool (£)</label>
+              <input class="inp" id="lPrice" type="number" step="0.25" min="0" value="6.50">
+              <div class="hint">Buyers compare on price per kilo — the panel converts it for you.</div>
+            </div>
+
+            <div class="field">
+              <label>Suggested print settings — this batch</label>
+              <div class="row-3">
+                <div><input class="inp" id="lNozzle" type="number" value="205" aria-label="Nozzle °C"><div class="hint">Nozzle °C</div></div>
+                <div><input class="inp" id="lBed" type="number" value="60" aria-label="Bed °C"><div class="hint">Bed °C</div></div>
+                <div><input class="inp" id="lFlow" type="number" value="98" aria-label="Flow %"><div class="hint">Flow %</div></div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Photos — minimum 3</label>
+              <div class="slots">
+                <label class="slot required"><span class="lab"><span class="plus">+</span>Spool, full frame<br>Required</span><input type="file" accept="image/*"></label>
+                <label class="slot required"><span class="lab"><span class="plus">+</span>Close-up of filament surface<br>Required</span><input type="file" accept="image/*"></label>
+                <label class="slot required"><span class="lab"><span class="plus">+</span>Print sample<br>Required</span><input type="file" accept="image/*"></label>
+                <label class="slot"><span class="lab"><span class="plus">+</span>Extra angle<br>Optional</span><input type="file" accept="image/*"></label>
+              </div>
+              <div class="hint">The print sample is the one that sells it — it answers "does recycled actually print?"</div>
+            </div>
+
+            <div class="field">
+              <label for="lDesc">Appearance notes</label>
+              <textarea class="note" id="lDesc" placeholder="Marbling, translucency, batch character, feedstock origin."></textarea>
+            </div>
+
+            <button class="btn" type="submit" id="saveListing">Create draft listing</button>
+          </div>
+        </form>
+
+        <aside class="card guide">
+          <div class="card-h"><h3>Pricing guidance</h3><div class="spacer"></div>
+            <span class="eyebrow">live</span></div>
+          <div class="card-b">
+            <div class="gauge">
+              <div class="gauge-track">
+                <div class="gauge-floor" id="gaugeFloor"></div>
+                <div class="gauge-band" id="gaugeBand"></div>
+                <div class="gauge-pin" id="gaugePin" data-v=""></div>
+              </div>
+              <div class="gauge-scale">
+                <span id="gaugeFloorLab">floor</span>
+                <span>suggested band</span>
+                <span id="gaugeMax"></span>
+              </div>
+            </div>
+
+            <div class="verdict" id="verdict"></div>
+
+            <div class="comps">
+              <div class="comp"><span>Comparable sales, this grade</span><b id="compBand"></b></div>
+              <div class="comp"><span>Hard floor</span><b id="compFloor"></b></div>
+              <div class="comp"><span>Buyer pays with 2× credit</span><b id="compCredit"></b></div>
+            </div>
+
+            <p style="font-size:12px;color:var(--dim);margin-top:14px;line-height:1.5">
+              The floor protects margin across the whole catalogue and cannot be undercut.
+              Above it, price freely — the band is what similar grades and colours have
+              actually sold for, and it sharpens as the platform accumulates sales.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ---------- scoreboard ---------- -->
+    <section class="view" id="view-scoreboard" hidden>
+      <div class="tier-hero" style="margin-bottom:16px">
+        <div class="layers"></div>
+        <div class="in">
+          <div class="tier-badge">T2</div>
+          <div style="flex:1;min-width:240px">
+            <h2>Established · Tier 2</h2>
+            <p>Tier benefits: better search placement, a badge on every listing, and a reduced
+               platform fee. Intake volume is recency-weighted, so recent months count for more.</p>
+            <div class="progress">
+              <div class="bar"><i style="width:69%"></i></div>
+              <div class="t"><span>412 kg intake, 90 days</span><span>600 kg → Tier 3</span></div>
+            </div>
+          </div>
+          <div style="min-width:200px">
+            <div class="eyebrow">Intake trend, 12 weeks</div>
+            <div id="spark" style="margin-top:8px"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid g-4" id="sbStats" style="margin-bottom:16px"></div>
+
+      <div class="grid g-3">
+        <section class="card">
+          <div class="card-h"><h3>Ranking inputs</h3></div>
+          <div class="card-b"><div class="meters" id="meters"></div>
+            <p style="font-size:12px;color:var(--dim);margin-top:14px">
+              Sustained misgrading, SLA breaches or an elevated dispute rate cause demotion.
+              Everything here is visible on your public profile.</p>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-h"><h3>Established tier</h3><div class="spacer"></div>
+            <span class="eyebrow">90-day intake</span></div>
+          <div class="card-b"><div class="lead" id="lead"></div>
+            <p style="font-size:12px;color:var(--dim);margin-top:12px">
+              Recruit your own scrap senders — off-platform intake linked to a Respool
+              shipment counts towards this. Your marketing is your ranking.</p>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-h"><h3>Milestones</h3></div>
+          <div class="card-b">
+            <div class="badges-grid">
+              <div class="mbadge"><span class="em">◍</span><span class="nm">First kilo</span></div>
+              <div class="mbadge"><span class="em">◍◍</span><span class="nm">10 kg</span></div>
+              <div class="mbadge"><span class="em">◉</span><span class="nm">100 kg</span></div>
+              <div class="mbadge"><span class="em">⬢</span><span class="nm">Zero disputes 90d</span></div>
+              <div class="mbadge locked"><span class="em">⬣</span><span class="nm">500 kg</span></div>
+              <div class="mbadge locked"><span class="em">★</span><span class="nm">Featured recycler</span></div>
+            </div>
+            <p style="font-size:12px;color:var(--dim);margin-top:14px">
+              Shareable. Recyclers with an audience of their own bring intake nobody paid for.</p>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- sheet + scrim -->
+<div class="scrim" id="scrim" hidden></div>
+<aside class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheet-h"><h3 id="sheetTitle"></h3><div style="flex:1"></div>
+    <button class="x" id="sheetClose" aria-label="Close">×</button></div>
+  <div class="sheet-b" id="sheetBody"></div>
+  <div class="sheet-f" id="sheetFoot"></div>
+</aside>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+  window.RESPOOL_CONFIG = {
+    SUPABASE_URL: '__SUPABASE_URL__',
+    SUPABASE_ANON_KEY: '__SUPABASE_ANON_KEY__',
+    RECYCLER_ID: '__RECYCLER_ID__',
+    PRICING: null   // injected by the pricing engine; falls back to defaults in recycler.js
+  };
+</script>
+<!-- Deploy-time overrides from the server's environment. MUST come after the
+     block above; /config.js merges over it, only for keys that are set. -->
+<script src="/respool/config.js"></script>
+<script src="recycler.js"></script>
+</body>
+</html>

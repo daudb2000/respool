@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Respool — filament from £2 a kilo</title>
+<meta name="description" content="Print the bin. Fill it with failed prints. Post it free. Get credit worth double on recycled filament.">
+<meta name="theme-color" content="#F6F4EF">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Regrind foundations */
+  --paper:#F6F4EF;
+  --card:#FFFFFF;
+  --ink:#15140F;
+  --ink2:#5C594E;
+  --ink3:#8A8578;
+  --line:#E6E2D8;
+  --line-2:#EDEAE1;
+  --forest:#0E4A38;
+  --forest-soft:rgba(14,74,56,.08);
+  --lime:#D6FF4B;
+  --lime-ink:#233A00;
+  --amber:#F4B63F;
+  --amber-text:#7A5200;
+  --disp:'Jost',"Avenir Next","Futura",sans-serif;
+  --body:'Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --ease:cubic-bezier(.2,.8,.3,1);
+  --r-in:10px; --r-sm:14px; --r:18px; --r-lg:22px; --r-cta:28px;
+  --shadow:0 1px 2px rgba(21,20,15,.05),0 8px 28px rgba(21,20,15,.07);
+  --shadow-lg:0 2px 6px rgba(21,20,15,.08),0 24px 60px rgba(21,20,15,.16);
+  --page-wash:
+    radial-gradient(1100px 600px at 85% -10%,rgba(214,255,75,.10),transparent 60%),
+    radial-gradient(900px 700px at -10% 30%,rgba(14,74,56,.04),transparent 55%);
+  --gut:clamp(16px,4vw,48px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  background:var(--page-wash),var(--paper);
+  background-attachment:fixed;
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:14.5px;
+  line-height:1.62;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--lime);color:var(--lime-ink)}
+h1,h2,h3,h4,.mark,.calc-total b,.node,.btn{font-family:var(--disp)}
+
+/* layer-line motif — only ever on dark ink surfaces */
+.layers{
+  position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:repeating-linear-gradient(to bottom,rgba(255,255,255,.035) 0 1px,transparent 1px 7px);
+  mask-image:linear-gradient(to bottom,transparent,#000 18%,#000 82%,transparent);
+}
+.wrap{max-width:1280px;margin:0 auto;padding:0 var(--gut)}
+section{position:relative}
+
+/* ---------- kicker (mono machine voice) ---------- */
+.kicker{
+  display:inline-flex;align-items:center;gap:9px;
+  font-family:var(--mono);font-size:12px;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--forest);
+  background:var(--forest-soft);padding:7px 14px;border-radius:999px;margin-bottom:20px;
+}
+.kicker .dot{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 3px rgba(214,255,75,.4);animation:pulse 2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 7px rgba(214,255,75,0)}}
+
+/* ---------- nav ---------- */
+nav{
+  position:sticky;top:0;z-index:50;
+  background:rgba(246,244,239,.82);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--line);
+}
+.nav-in{display:flex;align-items:center;justify-content:space-between;height:68px;gap:16px}
+.mark{font-weight:700;font-size:20px;letter-spacing:-.02em;display:flex;align-items:center;gap:10px}
+.mark i{
+  width:26px;height:26px;border-radius:50%;display:block;position:relative;
+  background:conic-gradient(var(--forest) 0 25%,var(--lime) 0 32%,var(--forest) 0 60%,var(--lime) 0 67%,var(--forest) 0);
+  animation:spin 14s linear infinite;
+}
+.mark i::after{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--paper)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- buttons ---------- */
+.btn{
+  font-weight:700;font-size:15px;letter-spacing:-.01em;
+  background:var(--forest);color:#F1F7F2;border:0;border-radius:999px;
+  padding:14px 26px;cursor:pointer;text-decoration:none;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .18s var(--ease),box-shadow .18s var(--ease),background .18s var(--ease);
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(14,74,56,.26)}
+.btn:active{transform:scale(.985)}
+.btn:focus-visible,a:focus-visible,button:focus-visible{outline:0;box-shadow:0 0 0 4px rgba(14,74,56,.22);border-color:var(--ink)}
+.btn-lg{padding:18px 34px;font-size:17px;border-radius:var(--r-cta)}
+.btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.btn-ghost:hover{background:var(--ink);color:var(--paper);box-shadow:none}
+
+/* ---------- hero ---------- */
+.hero{padding:clamp(36px,6vh,80px) 0 clamp(44px,7vh,84px);overflow:hidden}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(28px,5vw,64px);align-items:center}
+h1{
+  font-weight:700;font-size:clamp(40px,5.6vw,68px);line-height:1.02;letter-spacing:-.035em;
+  margin-bottom:20px;
+}
+/* lime underline slab. Painted as a background on the inline itself with
+   box-decoration-break:clone so it follows every line fragment — an
+   absolutely-positioned ::after is not painted at all once the <em> wraps. */
+h1 em{
+  font-style:normal;color:var(--forest);
+  background-image:linear-gradient(var(--lime),var(--lime));
+  background-repeat:no-repeat;
+  background-size:100% .30em;
+  background-position:0 calc(100% - 4px);
+  border-radius:3px;
+  -webkit-box-decoration-break:clone;box-decoration-break:clone;
+}
+.lede{font-size:17px;line-height:1.6;color:var(--ink2);max-width:46ch;margin-bottom:28px}
+.hero-cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.microcopy{font-size:13.5px;color:var(--ink2);margin-top:16px}
+
+/* recycler map: where the boxes actually go, and what scrap earns there */
+.spool-stage{position:relative;display:flex;justify-content:center;align-items:center}
+.rmap-card{
+  width:min(100%,420px);background:#fff;border:1px solid var(--hair);border-radius:22px;
+  padding:22px 22px 16px;box-shadow:0 12px 32px rgba(21,20,15,.08);
+}
+.rmap-kicker{
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--forest);margin-bottom:10px;
+}
+.rmap{width:100%;height:auto;display:block;margin:0 auto 8px;max-height:280px}
+.rmap-gb{fill:var(--paper);stroke:var(--hair);stroke-width:1.5;stroke-linejoin:round}
+.rmap-dot{fill:var(--forest);stroke:#fff;stroke-width:1.5;cursor:pointer}
+.rmap-dot.open{animation:rmap-pulse 2s ease-in-out infinite}
+@keyframes rmap-pulse{0%,100%{opacity:1}50%{opacity:.55}}
+@media (prefers-reduced-motion: reduce){.rmap-dot.open{animation:none}}
+.rmap-row{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:9px 2px;border-top:1px solid var(--hair);font-size:14px;
+}
+.rmap-row b{font-weight:600}
+.rmap-row .where{color:var(--ink2);font-size:12.5px}
+.rmap-credit{
+  font-family:var(--mono);font-size:12px;background:var(--lime);color:var(--ink);
+  border-radius:999px;padding:4px 10px;white-space:nowrap;
+}
+.rmap-loading,.rmap-empty{color:var(--ink2);font-size:13.5px;padding:8px 2px}
+@keyframes spool-spin{to{transform:rotate(360deg)}}
+.spool-glow{
+  position:absolute;width:74%;aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle,rgba(214,255,75,.35),rgba(14,74,56,.05) 55%,transparent 70%);
+  filter:blur(10px);z-index:-1;
+}
+
+/* ---------- rate estimate / price maths ---------- */
+.maths{padding:clamp(44px,7vh,84px) 0}
+h2{font-weight:700;font-size:clamp(26px,3.2vw,38px);line-height:1.06;letter-spacing:-.03em;margin-bottom:14px}
+.sect-note{color:var(--ink2);font-size:14.5px;max-width:56ch}
+.maths-in{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,5vw,64px);align-items:center}
+.calc{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(22px,3.4vw,32px);box-shadow:var(--shadow)}
+.calc-row{
+  display:flex;justify-content:space-between;align-items:baseline;gap:16px;
+  padding:14px 0;border-bottom:1px solid var(--line-2);
+  font-family:var(--mono);font-size:13.5px;color:var(--ink2);
+}
+.calc-row:last-of-type{border-bottom:0}
+.calc-row b{font-family:var(--mono);font-weight:700;font-size:17px;color:var(--ink)}
+.calc-total{margin-top:12px;padding-top:20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline;gap:16px}
+.calc-total span{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
+.calc-total b{font-weight:700;font-size:clamp(38px,6vw,54px);letter-spacing:-.035em;color:var(--forest)}
+.credit-tag{color:var(--lime-ink)!important;background:var(--lime);border-radius:999px;padding:2px 10px}
+
+/* honesty block — signature pattern */
+.honesty{
+  margin-top:22px;background:var(--ink);color:#CFCDC2;border-radius:var(--r);
+  padding:18px 22px;position:relative;overflow:hidden;
+}
+.honesty h4{font-size:15px;font-weight:700;letter-spacing:-.02em;color:var(--paper);margin-bottom:6px;position:relative;z-index:1}
+.honesty p{font-size:13.5px;line-height:1.6;position:relative;z-index:1}
+.honesty p + p{margin-top:8px}
+.honesty b{color:var(--lime);font-weight:700}
+
+/* ---------- the loop / ProcessLine ---------- */
+.loop{padding:clamp(44px,7vh,84px) 0}
+.loop-head{max-width:56ch;margin-bottom:clamp(30px,5vw,52px)}
+
+/* ProcessLine rail: parcel in → weighed → shredded → extruded → wound → listed */
+.processline{
+  background:var(--ink);border-radius:var(--r-lg);padding:26px clamp(18px,3vw,30px);
+  position:relative;overflow:hidden;margin-bottom:clamp(34px,5vw,54px);
+}
+.pl-kicker{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:#8F8C80;margin-bottom:18px;position:relative;z-index:1}
+.pl-rail{display:flex;align-items:flex-start;gap:0;position:relative;z-index:1}
+.pl-stage{flex:1;min-width:0;text-align:center;position:relative;padding-top:22px}
+.pl-stage::before{content:"";position:absolute;top:7px;left:0;right:0;height:1px;background:rgba(255,255,255,.14)}
+.pl-stage:first-child::before{left:50%}
+.pl-stage:last-child::before{right:50%}
+.pl-stage::after{
+  content:"";position:absolute;top:3px;left:50%;margin-left:-4.5px;
+  width:9px;height:9px;border-radius:50%;background:#4E4B41;
+  transition:background .25s var(--ease),box-shadow .25s var(--ease);
+}
+.pl-stage.on::after{background:var(--lime);box-shadow:0 0 0 4px rgba(214,255,75,.18)}
+.pl-stage span{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#A7A499;display:block;padding:0 4px}
+.pl-stage.on span{color:var(--paper)}
+
+.strand-wrap{position:relative}
+.strand{position:absolute;left:26px;top:0;height:100%;width:2px;overflow:visible}
+.strand-line{stroke-width:2;fill:none;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.6s var(--ease)}
+.strand-wrap.lit .strand-line{stroke-dashoffset:0}
+.steps{display:flex;flex-direction:column;gap:clamp(22px,4vw,38px)}
+.step{display:grid;grid-template-columns:54px 1fr;gap:clamp(16px,3vw,30px);align-items:start;opacity:0;transform:translateY(14px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.step.lit{opacity:1;transform:none}
+.node{
+  width:54px;height:54px;border-radius:50%;display:grid;place-items:center;
+  background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);
+  font-family:var(--mono);font-size:13px;font-weight:700;color:var(--ink);position:relative;z-index:2;
+}
+.step h3{font-weight:700;font-size:clamp(19px,2.6vw,24px);letter-spacing:-.025em;margin-bottom:6px}
+.step p{color:var(--ink2);max-width:56ch}
+.step p b{color:var(--ink);font-weight:600}
+.loop-close{
+  margin-top:34px;margin-left:clamp(0px,3vw,84px);padding:18px 22px;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);box-shadow:var(--shadow);
+  font-family:var(--mono);font-size:13px;color:var(--ink2);
+}
+.loop-close b{color:var(--lime-ink);background:var(--lime);border-radius:999px;padding:2px 9px;font-weight:700}
+
+/* ---------- the bin / box order ---------- */
+.bin{padding:clamp(44px,7vh,84px) 0}
+.bin-grid{display:grid;grid-template-columns:.95fr 1.05fr;gap:clamp(30px,5vw,64px);align-items:center}
+.bin-art{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:clamp(24px,4vw,40px);display:grid;place-items:center;position:relative;overflow:hidden;box-shadow:var(--shadow);
+}
+.bin-art svg{width:100%;max-width:330px;height:auto;position:relative;z-index:1}
+.chip{
+  display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--lime-ink);
+  background:var(--lime);border:1px solid rgba(35,58,0,.15);border-radius:999px;padding:6px 13px;margin-bottom:18px;
+}
+.dl{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+.dl a{
+  font-family:var(--body);font-size:14.5px;font-weight:600;text-decoration:none;color:var(--ink);
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-in);padding:12px 18px;
+  transition:border-color .18s var(--ease),transform .18s var(--ease),box-shadow .18s var(--ease);
+}
+.dl a:hover{border-color:var(--ink);transform:translateY(-2px);box-shadow:var(--shadow)}
+
+/* ---------- marketplace ---------- */
+.shop{padding:clamp(44px,7vh,84px) 0}
+.shop-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:26px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:18px}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+  box-shadow:var(--shadow);
+  transition:transform .25s var(--ease),box-shadow .25s var(--ease);
+}
+.card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg)}
+.swatch{height:150px;position:relative}
+.swatch::after{
+  content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(to bottom,rgba(21,20,15,.10) 0 1px,transparent 1px 5px);
+}
+.card-b{padding:16px 17px 18px}
+.card-b h4{font-family:var(--body);font-weight:600;font-size:15.5px;letter-spacing:-.01em;margin-bottom:3px}
+.card-b .by{font-size:13px;color:var(--ink2);margin-bottom:14px}
+.card-meta{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:13px}
+.card-meta .kg{font-size:17px;font-weight:700;color:var(--ink)}
+.card-meta .kg small{font-size:11.5px;color:var(--ink2);font-weight:400}
+.grade{font-family:var(--mono);font-size:10px;letter-spacing:.12em;border:1px solid var(--line);border-radius:999px;padding:4px 9px;color:var(--ink2)}
+.grade.a{border-color:rgba(244,182,63,.55);color:var(--amber-text);background:rgba(244,182,63,.14)}
+
+/* ---------- mission ---------- */
+.mission{padding:clamp(44px,7vh,84px) 0}
+.mission-in{
+  max-width:66ch;background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:clamp(26px,4vw,44px);box-shadow:var(--shadow);
+}
+.mission p{font-size:16px;line-height:1.62;color:var(--ink2);margin-bottom:16px}
+.mission p:last-child{margin-bottom:0}
+.mission strong{color:var(--ink);font-weight:600}
+
+/* ---------- final cta ---------- */
+.end{padding:clamp(52px,8vh,100px) 0;text-align:center}
+.end h2{font-size:clamp(32px,5vw,56px);max-width:18ch;margin:0 auto 16px}
+.end p{color:var(--ink2);margin-bottom:30px}
+footer{border-top:1px solid var(--line);padding:28px 0;font-size:13px;color:var(--ink2)}
+.foot-in{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.foot-in .mono{font-family:var(--mono);font-size:12px;letter-spacing:.06em}
+
+@media(max-width:900px){
+  .hero-grid,.maths-in,.bin-grid{grid-template-columns:1fr}
+  .spool-stage{order:-1;margin-bottom:8px}
+  .spool{max-width:300px}
+  .lede{max-width:none}
+  .step{grid-template-columns:44px 1fr}
+  .node{width:44px;height:44px;font-size:12px}
+  .strand{left:21px}
+  .pl-rail{flex-wrap:wrap;gap:14px 0}
+  .pl-stage{flex:0 0 33.333%}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .step{opacity:1;transform:none}
+  .strand-line{stroke-dashoffset:0}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-in">
+    <div class="mark"><i></i>Respool</div>
+    <a href="#box" class="btn">Order a free box</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="kicker"><span class="dot"></span>Recycled PLA &amp; PETG · United Kingdom</div>
+      <h1>Filament from <em>£2 a kilo.</em> The other four quid is sitting in your bin.</h1>
+      <p class="lede">Failed prints, brims, purge towers, supports. Post them free, get credit, spend it here. Credit is worth double on recycled spools.</p>
+      <div class="hero-cta">
+        <a href="#box" class="btn btn-lg">Order a free box</a>
+        <a href="#loop" class="btn btn-lg btn-ghost">See how it works</a>
+      </div>
+      <p class="microcopy">No account needed. Takes about forty seconds.</p>
+    </div>
+    <div class="spool-stage">
+      <div class="spool-glow"></div>
+      <div class="rmap-card">
+        <div class="rmap-kicker">Recyclers taking scrap right now</div>
+        <svg class="rmap" viewBox="0 0 300 380" role="img" aria-label="Map of UK recyclers currently accepting scrap">
+          <path class="rmap-gb" d="M168 12 L186 26 L182 48 L196 62 L190 84 L206 96 L214 122 L204 138 L216 154 L210 176 L226 192 L234 216 L224 232 L238 248 L230 268 L214 282 L220 300 L204 316 L186 322 L168 340 L146 348 L122 344 L104 330 L96 312 L104 296 L92 282 L98 264 L86 250 L94 234 L82 220 L92 204 L82 188 L94 174 L88 156 L74 148 L64 128 L76 116 L70 98 L84 92 L92 72 L108 64 L104 44 L120 36 L130 16 L150 20 Z"/>
+          <g id="rmap-dots"></g>
+        </svg>
+        <div class="rmap-list" id="rmap-list">
+          <div class="rmap-loading">Finding recyclers…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- THE MATHS — rate estimate, before any gate -->
+<section class="maths">
+  <div class="wrap maths-in">
+    <div>
+      <h2>The maths, in full.</h2>
+      <p class="sect-note">No points, no tokens, no conversion rate to work out. Credit is denominated in pounds and you can see exactly what it takes off before you pay — and before we ask you for anything.</p>
+      <div class="honesty">
+        <div class="layers"></div>
+        <h4>What this estimate is, honestly</h4>
+        <p>It's an example, not a quote. Your credit depends on what actually lands: material, weight on our scales, and how clean the scrap is. We photograph the parcel and show you the weighing before anything hits your balance.</p>
+        <p><b>↺</b> Nothing here is gated. No sign-in to see the numbers, no sign-in to order the box.</p>
+      </div>
+    </div>
+    <div class="calc" aria-label="Example price breakdown">
+      <div class="calc-row"><span>1&nbsp;kg recycled PLA · Grade&nbsp;A</span><b>£6.00</b></div>
+      <div class="calc-row"><span>Your credit · £2.00</span><b class="credit-tag">−£2.00</b></div>
+      <div class="calc-row"><span>Recycled bonus · ×2</span><b class="credit-tag">−£2.00</b></div>
+      <div class="calc-total"><span>You pay</span><b>£2.00</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- THE LOOP -->
+<section class="loop" id="loop">
+  <div class="wrap">
+    <div class="loop-head">
+      <h2>One strand, start to finish.</h2>
+      <p class="sect-note">The bin on your desk and the balance in the app are the same object at different points in the loop.</p>
+    </div>
+
+    <div class="processline" id="processline">
+      <div class="layers"></div>
+      <div class="pl-kicker">What happens to your parcel</div>
+      <div class="pl-rail">
+        <div class="pl-stage"><span>Parcel in</span></div>
+        <div class="pl-stage"><span>Weighed</span></div>
+        <div class="pl-stage"><span>Shredded</span></div>
+        <div class="pl-stage"><span>Extruded</span></div>
+        <div class="pl-stage"><span>Wound</span></div>
+        <div class="pl-stage"><span>Listed</span></div>
+      </div>
+    </div>
+
+    <div class="strand-wrap" id="strand-wrap">
+      <svg class="strand" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#0E4A38"/>
+            <stop offset="45%" stop-color="#0E4A38"/>
+            <stop offset="78%" stop-color="#D6FF4B"/>
+            <stop offset="100%" stop-color="#D6FF4B"/>
+          </linearGradient>
+        </defs>
+        <line class="strand-line" x1="1" y1="0" x2="1" y2="100%" stroke="url(#sg)"/>
+      </svg>
+
+      <div class="steps">
+        <div class="step"><div class="node">01</div><div>
+          <h3>Prints fail</h3>
+          <p>Warped first layers, spaghetti, supports, the purge tower you throw away every single print. It adds up faster than anyone admits.</p>
+        </div></div>
+
+        <div class="step"><div class="node">02</div><div>
+          <h3>The bin catches it</h3>
+          <p>Print our scrap bin tonight — <b>free, on MakerWorld and Printables</b>. It sits next to the printer and sizes exactly to the postage box, so you know when it's full.</p>
+        </div></div>
+
+        <div class="step"><div class="node">03</div><div>
+          <h3>Post it free</h3>
+          <p>Order a box, fill it, post it. It goes to a <b>local recycler</b> — a real person with a shredder and an extruder, not a hole in the ground.</p>
+        </div></div>
+
+        <div class="step"><div class="node">04</div><div>
+          <h3>Credit lands</h3>
+          <p>They weigh it, photograph it and credit your wallet. You'll see the photos and the weight. <b>Roughly £4 a kilo</b>, depending on material and how clean it is.</p>
+        </div></div>
+
+        <div class="step"><div class="node">05</div><div>
+          <h3>Spend it</h3>
+          <p>On recycled spools your credit is <b>worth double</b>. On branded filament it's worth face value. Either way it only spends here.</p>
+        </div></div>
+      </div>
+
+      <div class="loop-close"><b>↺</b>&nbsp; And the next print fails, and the bin fills again.</div>
+    </div>
+  </div>
+</section>
+
+<!-- THE BIN -->
+<section class="bin" id="box">
+  <div class="wrap bin-grid">
+    <div class="bin-art">
+      <svg viewBox="0 0 300 260" role="img" aria-label="The printable scrap bin, shown with visible print layers">
+        <defs>
+          <linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#0E4A38"/><stop offset="100%" stop-color="#0A3227"/>
+          </linearGradient>
+          <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#D6FF4B"/><stop offset="100%" stop-color="#BEE83A"/>
+          </linearGradient>
+          <pattern id="lay" width="4" height="4" patternUnits="userSpaceOnUse">
+            <rect width="4" height="4" fill="none"/>
+            <line x1="0" y1="3.5" x2="4" y2="3.5" stroke="rgba(0,0,0,.24)" stroke-width="1"/>
+          </pattern>
+        </defs>
+        <ellipse cx="150" cy="232" rx="96" ry="14" fill="rgba(21,20,15,.14)"/>
+        <path d="M62 74 L238 74 L214 224 L86 224 Z" fill="url(#bg1)"/>
+        <path d="M62 74 L238 74 L214 224 L86 224 Z" fill="url(#lay)"/>
+        <path d="M62 74 L150 96 L238 74 L150 52 Z" fill="url(#bg2)" opacity=".95"/>
+        <path d="M150 96 L238 74 L214 224 L150 246 Z" fill="rgba(0,0,0,.20)"/>
+        <path d="M108 40 q42 -22 84 0" stroke="#15140F" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <circle cx="108" cy="40" r="4" fill="#15140F"/>
+      </svg>
+    </div>
+    <div>
+      <div class="chip">↺ Free to print tonight</div>
+      <h2>The bin is the front door.</h2>
+      <p class="sect-note">Most scrap never gets recycled because there is nowhere convenient to put it. So we designed something you can print this evening, in whatever colour you've already got loaded, that fits under the bench and matches the postage box exactly.</p>
+      <p class="sect-note" style="margin-top:14px">Scan the code on the base when it's full and the app knows what's coming before you've sealed the tape.</p>
+      <div class="dl">
+        <a href="#">Download on MakerWorld</a>
+        <a href="#">Download on Printables</a>
+      </div>
+      <div class="hero-cta" style="margin-top:26px">
+        <a href="#" class="btn btn-lg">Order a free box</a>
+      </div>
+      <p class="microcopy">Free box, free postage, no card. We pay the label both ways.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MARKETPLACE -->
+<section class="shop">
+  <div class="wrap">
+    <div class="shop-head">
+      <div>
+        <h2>Then spend it somewhere good.</h2>
+        <p class="sect-note">Recycled batches from independent makers, alongside the branded rolls you already buy. Sorted by price per kilo, because that's the number that matters.</p>
+      </div>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <div class="swatch" style="background:linear-gradient(140deg,#2F6F5C,#0E4A38 55%,#0A3227)"></div>
+        <div class="card-b">
+          <h4>Seaglass Marble</h4>
+          <div class="by">Tyne Reclaim · Gold tier</div>
+          <div class="card-meta"><span class="kg">£6.20<small>/kg</small></span><span class="grade a">GRADE A</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="swatch" style="background:linear-gradient(140deg,#F4B63F,#D9891F 55%,#8E5410)"></div>
+        <div class="card-b">
+          <h4>Ember Swirl</h4>
+          <div class="by">Halcyon Filament · Silver tier</div>
+          <div class="card-meta"><span class="kg">£5.80<small>/kg</small></span><span class="grade a">GRADE A</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="swatch" style="background:linear-gradient(140deg,#B7C96A,#6E7F3A 55%,#3C4620)"></div>
+        <div class="card-b">
+          <h4>Offcut Olive</h4>
+          <div class="by">Ovenden Works · New &amp; notable</div>
+          <div class="card-meta"><span class="kg">£5.40<small>/kg</small></span><span class="grade">GRADE B</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="swatch" style="background:linear-gradient(140deg,#E8E2D6,#A79C8C 50%,#5E5648)"></div>
+        <div class="card-b">
+          <h4>Mystery Kilo</h4>
+          <div class="by">Recycler's choice · limited</div>
+          <div class="card-meta"><span class="kg">£4.50<small>/kg</small></span><span class="grade">MIXED</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MISSION -->
+<section class="mission">
+  <div class="wrap">
+    <div class="mission-in">
+      <h2>We're not asking you to do the right thing.</h2>
+      <p>PLA is compostable in an industrial digester and almost nowhere else. In practice, nearly all of it goes to landfill or incineration — not because it can't be recycled, but because <strong>no one has made it worth anybody's while.</strong></p>
+      <p>So we didn't build a scheme. We built a market. Recyclers earn a living wage from scrap because they sell what they make. You send scrap because it takes four quid off your next order. Nobody has to be virtuous for it to work.</p>
+      <p><strong>That's the whole thesis: make the right thing cheaper than the alternative, and it stops needing a campaign.</strong></p>
+    </div>
+  </div>
+</section>
+
+<!-- END -->
+<section class="end">
+  <div class="wrap">
+    <h2>Start with the bin. It's free either way.</h2>
+    <p>Print it tonight, order the box, decide about the rest later.</p>
+    <a href="#" class="btn btn-lg">Order a free box</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-in">
+    <div>Respool · working name · United Kingdom. Prices on this page are examples, not quotes — the real number is whatever your parcel weighs.</div>
+    <div class="mono">PLA &amp; PETG · PAYMENTS BY STRIPE</div>
+  </div>
+</footer>
+
+<script>
+// Recycler map: live from the public recycler_map view. Positions are
+// deliberately coarse (~11km) — near enough to mean "near you", useless
+// for finding an address. Credit chips are the lime moment: that is loop value.
+(function(){
+  var SB="https://scclseczjiipxnxfrcmi.supabase.co";
+  var K="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjY2xzZWN6amlpcHhueGZyY21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjkzMzAsImV4cCI6MjA4OTQ0NTMzMH0.utisDyOUO899eV-LPz22JgxlGlgxJzh4RjDBQGpGomg"; // anon key: public by design
+  var dots=document.getElementById('rmap-dots'), list=document.getElementById('rmap-list');
+  if(!dots||!list) return;
+  // linear GB projection matched to the outline path above
+  function xy(lat,lng){ return [ (lng+7.5)/9.0*300, (59.5-lat)/9.5*380 ]; }
+  function gbp(p){ return '£'+(p/100).toFixed(2); }
+  fetch(SB+'/rest/v1/recycler_map?select=*',{headers:{apikey:K,Authorization:'Bearer '+K}})
+    .then(function(r){ return r.json(); })
+    .then(function(rows){
+      if(!rows||!rows.length){ list.innerHTML='<div class="rmap-empty">First recyclers onboarding now. Your box still ships — we match it for you.</div>'; return; }
+      var d='',h='';
+      rows.forEach(function(r){
+        var p=xy(parseFloat(r.lat),parseFloat(r.lng));
+        d+='<circle class="rmap-dot'+(r.accepting_intake?' open':'')+'" cx="'+p[0].toFixed(0)+'" cy="'+p[1].toFixed(0)+'" r="7"><title>'+r.trading_name+' — '+r.region+'</title></circle>';
+        var rates=r.credit_pence_per_kg||{};
+        var chip=Object.keys(rates).map(function(m){return m+' '+gbp(rates[m])+'/kg';}).join(' · ');
+        h+='<div class="rmap-row"><div><b>'+r.trading_name+'</b><div class="where">'+r.region+(r.accepting_intake?' · taking scrap now':' · at capacity')+'</div></div>'
+          +'<span class="rmap-credit">'+chip+'</span></div>';
+      });
+      dots.innerHTML=d; list.innerHTML=h;
+    })
+    .catch(function(){ list.innerHTML='<div class="rmap-empty">Map unavailable — your box still ships and we match it for you.</div>'; });
+})();
+
+// Reveal the loop steps in sequence, drawing the strand as it goes.
+(function(){
+  var wrap=document.getElementById('strand-wrap');
+  var steps=document.querySelectorAll('.step');
+  var line=document.querySelector('.strand-line');
+  function sizeStrand(){
+    if(!line)return;
+    var len=line.getTotalLength();
+    line.style.strokeDasharray=len;
+    if(!wrap.classList.contains('lit'))line.style.strokeDashoffset=len;
+  }
+  window.addEventListener('resize',sizeStrand);
+  setTimeout(sizeStrand,60);
+
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(!e.isIntersecting)return;
+      if(e.target===wrap){wrap.classList.add('lit');line.style.strokeDashoffset=0;}
+      else{
+        var i=[].indexOf.call(steps,e.target);
+        setTimeout(function(){e.target.classList.add('lit')},i*110);
+      }
+      io.unobserve(e.target);
+    });
+  },{threshold:.25});
+  if(wrap)io.observe(wrap);
+  steps.forEach(function(s){io.observe(s)});
+})();
+
+// ProcessLine rail: stages light in sequence on a 2.4s cycle.
+(function(){
+  var rail=document.getElementById('processline');
+  if(!rail)return;
+  var stages=rail.querySelectorAll('.pl-stage');
+  if(!stages.length)return;
+  if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    stages.forEach(function(s){s.classList.add('on')});
+    return;
+  }
+  var i=0,timer=null,step=2400/stages.length;
+  function tick(){
+    stages.forEach(function(s,n){s.classList.toggle('on',n<=i)});
+    i=(i+1)%(stages.length+1);
+  }
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){if(!timer){tick();timer=setInterval(tick,step);}}
+      else if(timer){clearInterval(timer);timer=null;}
+    });
+  },{threshold:.2});
+  io.observe(rail);
+})();
+</script>
+</body>
+</html>

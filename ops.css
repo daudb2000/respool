@@ -1,0 +1,220 @@
+/* Respool — founder ops console
+   ---------------------------------------------------------------------------
+   Design language: Regrind (approved). Porcelain paper, warm ink, forest
+   primary, lime ONLY where credit / scrap / loop appears — here that means the
+   "requested box" pulse, because a requested box IS the loop starting. One
+   motion curve. No square corners. Mono kickers. Honesty blocks.
+   --------------------------------------------------------------------------- */
+
+:root{
+  --porcelain:#F6F4EF;
+  --ink:#15140F;
+  --ink-muted:#5C594E;
+  --ink-dim:#8A8578;
+  --forest:#0E4A38;
+  --forest-soft:#1C7A5C;
+  --lime:#D6FF4B;
+  --lime-ink:#233A00;
+  --amber:#F4B63F;
+  --danger:#A8321E;
+  --hair:#E6E2D8;
+  --hair-2:#D5D0C3;
+  --paper:#FFFFFF;
+  --wash:#EFEDE5;
+
+  --r-sm:10px; --r-input:12px; --r:14px; --r-card:18px; --r-panel:22px;
+  --r-cta:28px; --r-pill:999px;
+  --curve:cubic-bezier(.2,.8,.3,1);
+  --ease:var(--curve);
+  /* four warm-ink elevation steps */
+  --sh-hair:0 1px 2px rgba(21,20,15,.05);
+  --sh-soft:0 1px 2px rgba(21,20,15,.05),0 8px 28px rgba(21,20,15,.07);
+  --sh-lift:0 2px 6px rgba(21,20,15,.08),0 24px 60px rgba(21,20,15,.16);
+  --sh-drawer:0 0 0 1px rgba(21,20,15,.06),-40px 0 90px rgba(21,20,15,.22);
+
+  --display:'Jost',ui-sans-serif,system-ui,sans-serif;
+  --body:'Inter',ui-sans-serif,system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,monospace;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+
+/* .live, .stack and .pulse set an explicit display, which outranks the UA
+   [hidden]{display:none} rule — without this, the OTP form, the live dot and
+   the "0 requested" badge all render before they are meant to. */
+[hidden]{display:none!important}
+body{
+  background:var(--porcelain);
+  color:var(--ink);
+  font:400 14.5px/1.62 var(--body);
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+
+/* two very-low-opacity radial fields over porcelain */
+.wash{
+  position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(900px 620px at 100% -8%, rgba(214,255,75,.14), transparent 62%),
+    radial-gradient(760px 700px at -10% 22%, rgba(14,74,56,.055), transparent 64%);
+}
+
+/* Canonical focus ring — identical to app.css / recycler.css / label.html.
+   Without it ops was the only surface falling back to the UA outline. */
+:focus-visible{outline:none;border-color:var(--ink);box-shadow:0 0 0 4px rgba(14,74,56,.22);border-radius:var(--r-sm)}
+
+.wrap{width:min(1152px,100%);margin:0 auto;padding:0 clamp(16px,4vw,48px)}
+
+h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.035em;margin:0}
+h1{font-size:38px;line-height:1.08}
+h2{font-size:22px;line-height:1.15}
+p{margin:0}
+code{font-family:var(--mono);font-size:13px;background:rgba(14,74,56,.07);padding:1px 6px;border-radius:6px}
+
+.kicker{
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-muted);margin:0;
+}
+.lede{color:var(--ink-muted);max-width:56ch;margin-top:10px}
+.note{color:var(--ink-muted);font-size:13.5px;margin-top:14px;max-width:56ch}
+
+/* ---------------- topbar ---------------- */
+.topbar{
+  position:sticky;top:0;z-index:20;
+  background:rgba(246,244,239,.82);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--hair);
+}
+.topbar-in{display:flex;align-items:center;justify-content:space-between;height:62px;gap:16px}
+.mark{display:flex;align-items:center;gap:9px;font-family:var(--display);font-weight:700;letter-spacing:-.035em;font-size:17px}
+.mark em{font-family:var(--mono);font-style:normal;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--forest);
+  border:1px solid rgba(14,74,56,.25);border-radius:var(--r-pill);padding:2px 9px}
+.disc{
+  width:19px;height:19px;border-radius:50%;
+  background:conic-gradient(from 0deg,var(--forest),var(--forest-soft),var(--forest));
+  box-shadow:inset 0 0 0 5px var(--porcelain), inset 0 0 0 6px rgba(21,20,15,.12);
+  animation:spin 14s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.live{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--forest);display:inline-flex;align-items:center;gap:7px}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--forest);animation:pulse 2s var(--curve) infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.82)}}
+
+/* ---------------- panels ---------------- */
+main{padding:clamp(44px,7vh,84px) 0 88px}
+.panel{
+  background:var(--paper);border:1px solid var(--hair);border-radius:var(--r-panel);
+  box-shadow:var(--sh-soft);padding:clamp(20px,3vw,30px);
+  margin-bottom:clamp(20px,3vh,30px);
+}
+.panel-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:20px}
+.panel-head h2{margin-top:7px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.panel-meta{font-family:var(--mono);font-size:12px;color:var(--ink-muted)}
+
+.gate{max-width:520px;margin-inline:auto}
+.gate h1{margin-top:8px}
+.honesty{border:1.5px solid rgba(14,74,56,.28);background:linear-gradient(180deg,rgba(14,74,56,.04),transparent)}
+.honesty h2{margin:8px 0 10px}
+.honesty p{color:var(--ink-muted);max-width:60ch;margin-bottom:16px}
+
+/* ---------------- forms + buttons ---------------- */
+.stack{display:flex;flex-direction:column;gap:14px;margin-top:20px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:6px}
+.field>span{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted)}
+.field input{
+  font:400 15.5px/1.4 var(--body);color:var(--ink);background:var(--paper);
+  border:1.5px solid var(--hair);border-radius:var(--r-input);padding:12px 14px;
+  transition:border-color 160ms var(--curve),box-shadow 160ms var(--curve);
+}
+.field input:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 4px rgba(14,74,56,.22)}
+.field.small{max-width:130px}
+#otp{font-family:var(--mono);letter-spacing:.4em;font-size:19px}
+
+.btn{
+  font:600 14.5px/1 var(--body);border-radius:var(--r-pill);border:1.5px solid transparent;
+  padding:13px 22px;cursor:pointer;transition:transform 140ms var(--curve),background 160ms var(--curve),box-shadow 180ms var(--curve),color 160ms var(--curve);
+}
+.btn:active{transform:scale(.985)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn-primary{background:var(--forest);color:var(--porcelain)}
+.btn-primary:hover:not(:disabled){box-shadow:var(--sh-lift)}
+.btn-ghost{background:transparent;color:var(--ink);border-color:var(--hair)}
+.btn-ghost:hover:not(:disabled){border-color:var(--ink)}
+.btn-sm{padding:9px 16px;font-size:13.5px}
+
+/* ---------------- tables ---------------- */
+.tablewrap{overflow-x:auto;border:1px solid var(--hair);border-radius:var(--r-card)}
+.table{width:100%;border-collapse:collapse;min-width:620px}
+.table th,.table td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--hair);vertical-align:middle}
+.table thead th{
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-muted);font-weight:400;background:rgba(21,20,15,.02);
+}
+.table tbody tr:last-child td{border-bottom:none}
+.table tbody tr{transition:background 160ms var(--curve)}
+.table tbody tr:hover{background:rgba(14,74,56,.035)}
+.num,.table td.num{text-align:right;font-family:var(--mono);font-size:13px}
+.name{font-weight:600}
+.mono{font-family:var(--mono);font-size:13px}
+.stale{color:var(--danger)}
+
+.tag{
+  display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  border-radius:var(--r-pill);padding:3px 10px;border:1px solid var(--hair);color:var(--ink-muted);
+}
+.tag-requested{border-color:rgba(14,74,56,.3);color:var(--forest)}
+.tag-dispatched{background:var(--forest);border-color:var(--forest);color:var(--porcelain)}
+
+/* lime is reserved for the loop — a requested box is the loop starting */
+.pulse{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+  background:var(--lime);color:var(--lime-ink);border-radius:var(--r-pill);padding:5px 12px;
+}
+.pulse i{width:8px;height:8px;border-radius:50%;background:var(--lime-ink);animation:pulse 2s var(--curve) infinite}
+.pulse b{font-weight:700}
+
+.empty{color:var(--ink-muted);margin-top:16px;max-width:56ch}
+
+/* ---------------- gauge ---------------- */
+.gauge{margin-bottom:22px}
+.gauge-bar{height:12px;border-radius:var(--r-pill);background:rgba(21,20,15,.07);overflow:hidden}
+.gauge-bar span{
+  display:block;height:100%;width:0;border-radius:var(--r-pill);background:var(--forest);
+  transition:width 400ms var(--curve),background 260ms var(--curve);
+}
+.gauge.warn .gauge-bar span{background:var(--amber)}
+.gauge.crit .gauge-bar span{background:var(--danger)}
+.gauge-line{margin-top:12px;color:var(--ink-muted);max-width:60ch}
+.gauge.warn .gauge-line,.gauge.crit .gauge-line{color:var(--ink)}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:18px}
+.stat{background:var(--paper);border:1px solid var(--hair);border-radius:var(--r-card);padding:16px 18px;box-shadow:var(--sh-hair)}
+.stat b{display:block;font-family:var(--display);font-weight:700;font-size:30px;letter-spacing:-.035em;margin-top:6px}
+.stat span{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted)}
+
+/* ---------------- QR ---------------- */
+.qr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:18px}
+.qr-card{
+  border:1px solid var(--hair);border-radius:var(--r-card);padding:16px 18px;background:var(--paper);
+  box-shadow:var(--sh-hair);transition:transform 250ms var(--curve),box-shadow 250ms var(--curve);
+}
+.qr-card:hover{transform:translateY(-6px);box-shadow:var(--sh-lift)}
+.qr-card h3{font-size:17px;margin:7px 0 4px}
+.qr-card p{font-family:var(--mono);font-size:12px;color:var(--ink-muted);word-break:break-all}
+.qr-card .row{margin-top:14px}
+.qr-custom{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;margin-top:22px}
+.qr-custom .field{flex:1 1 220px}
+.qr-custom .field.small{flex:0 0 130px}
+
+.foot{text-align:center;padding-top:6px}
+
+@media (max-width:900px){
+  h1{font-size:32px}
+  .panel-head{align-items:flex-start}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important;transition:none !important}
+}
